@@ -262,7 +262,7 @@
       <span class="post-meta-item-text">发表于</span>
       
 
-      <time title="创建时间：2021-04-07 20:51:54 / 修改时间：21:00:14" itemprop="dateCreated datePublished" datetime="2021-04-07T20:51:54+08:00">2021-04-07</time>
+      <time title="创建时间：2021-04-07 20:51:54 / 修改时间：21:18:06" itemprop="dateCreated datePublished" datetime="2021-04-07T20:51:54+08:00">2021-04-07</time>
     </span>
 
   
@@ -291,37 +291,15 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p><strong>一、说明</strong><br><strong>1.1 背景说明</strong><br>对于大多数刚开始接触wireshark的使用者而言，经常是开始的时候时候看到wireshark能把所有数据包都拦截下来觉得强无敌，但是面对一大堆的数据包要问有什么用或者说想要找到我想要的那些数据包怎么找（比如telnet登录过程的那些数据包）则完全是一脸茫然。<br>一是界面一堆窗口，什么作用什么区别看不懂；二是捕获、显示过滤器表达示看不出有什么规律，每次过滤都要百度找半天。其实wireshark界面还是比较清晰的，过滤器表过示也不困难，我们今天就来破解这wireshark使用的两大难题。<br>官网地址：<a href="https://link.zhihu.com/?target=https://www.wireshark.org/">https://www.wireshark.org/</a><br>官网下载地址：<a href="https://link.zhihu.com/?target=https://www.wireshark.org/%23download">https://www.wireshark.org/#download</a><br>安装就不多说了和一般windows一样下一步下一下装就可以了。另外ethereal为什么在2006年更名wireshark参见：<a href="https://link.zhihu.com/?target=https://www.linux.com/news/ethereal-changes-name-wireshark">https://www.linux.com/news/ethereal-changes-name-wireshark</a></p>
-<p><strong>1.2 拦截本地回环数据</strong><br>另外注意本机访问本机的回环数据是不经过网卡的，比如我们在本机访问搭建在本机上的web服务，但我们经常有服务搭建在本机的操作也经常有拦截本地回环数据包加以分析的需求，所以我们环要拦载回环数据包。操作如下。<br>首先，以管理员身份运行cmd（普通用户没有路由表操作权限，会提示“请求的操作需要提升”）<br>然后，使用ipconfig查看本机ip和网关：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ipconfig</span><br></pre></td></tr></table></figure>
-
-<p>再然后，使用以下命令添加路由，指定回环数据也要先转发到网关（使用上一步获取本的本机ip和网关替换其中的<your_IP>和<gateway_IP>）：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">route add &lt;your_IP&gt; mask 255.255.255.255 &lt;gateway_IP&gt; metric 1</span><br></pre></td></tr></table></figure>
-
-<p>最后，查看路由表中路由是否已添加成功：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">route print</span><br></pre></td></tr></table></figure>
-
-<p>回环数据经网关再回来会增加网卡的压力，可使用以下命令删除路由（使用前边获取本的本机ip替换其中的<your_IP>）：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">route delete &lt;your_IP&gt;</span><br></pre></td></tr></table></figure>
-
-<p><strong>二、Wireshark界面说明</strong><br>过滤器表达式书写是wireshark使用的核心，但在此之前，很多初学者还会碰到一个难题，就是感觉wireshark界面上很多东西不懂怎么看。其实还是挺明了的我们下面简单说一下，如下图。<br>1号窗口展示的是wireshark捕获到的所有数据包的列表。注意最后一列Info列是wireshark组织的说明列并不一定是该数据包中的原始内容。<br>2号窗口是1号窗口中选定的数据包的分协议层展示。底色为红色的是因为wireshark开启校验和验证而该层协议校验和又不正确所致。<br>3号窗口是1号窗口中选定的数据包的源数据，其中左侧是十六进制表示右侧是ASCII码表示。另外在2号窗口中选中某层或某字段，3号窗口对应位置也会被高亮。</p>
-<p><img src="https://pic1.zhimg.com/v2-f2b07bddb70460b9bce5861f18e13228_r.jpg" alt="preview"></p>
-<p>被认为最难的其实还是2号窗口展开后的内容不懂怎么看，其实也很明了，以IP层为例：<br>每一行就对应该层协议的一个字段；中括号行是前一字段的说明。<br>冒号前的英文是协议字段的名称；冒号后是该数据包中该协议字段的值。</p>
-<p><img src="https://pic1.zhimg.com/80/v2-e89d4a4e834becccb7eb5127c9b6c574_720w.jpg" alt="img"></p>
-<p><strong>三、捕获过滤器表达式</strong><br>捕获过滤器表达式作用在wireshark开始捕获数据包之前，只捕获符合条件的数据包，不记录不符合条件的数据包。<br>捕获过滤器表达式没有像显示过滤器表达式那样明显的规律，但写法不多所以也不难；而且除非全部捕获要占用的磁盘空间实现太大，且你非常明确过滤掉的数据包是你不需要的，不然一般都不用捕获过滤器表达式而用显示过滤器表达式。<br>在wireshark2.x版本，启动后欢迎界面即有捕获过滤器，在其中输入过滤表达式开始捕获数据包时即会生效：</p>
-<p><img src="https://pic4.zhimg.com/v2-1bb56d2339d861ddd51d6f1a0c4e0e1f_r.jpg" alt="preview"></p>
-<p>点击图中“书签”标志，再点管理“捕获筛选器”，即可看到常用捕获过滤表达示的书写形式</p>
-<p><img src="https://pic2.zhimg.com/v2-e9a92942ad3a357d937148ae60034da5_r.jpg" alt="preview"></p>
-<p><img src="https://pic1.zhimg.com/80/v2-3d95a6f67785d9e4610a362cd62f4c60_720w.jpg" alt="img"></p>
-<p><strong>四、显示过滤器表达示及其书写规律</strong><br>显示过滤器表达式作用在在wireshark捕获数据包之后，从已捕获的所有数据包中显示出符合条件的数据包，隐藏不符合条件的数据包。<br>显示过滤表达示在工具栏下方的“显示过滤器”输入框输入即可生效</p>
-<p><img src="https://pic1.zhimg.com/v2-dd65229beed87d985df9e4a3504f7ae4_r.jpg" alt="preview"></p>
-<p><strong>4.1 基本过滤表达式</strong><br>一条基本的表达式由过滤项、过滤关系、过滤值三项组成。<br>比如ip.addr == 192.168.1.1，这条表达式中ip.addr是过滤项、==是过滤关系，192.168.1.1是过滤值（整条表达示的意思是找出所有ip协议中源或目标ip、等于、192.168.1.1的数据包）<br><strong>4.1.1 过滤项</strong><br>初学者感觉的“过滤表达式复杂”，最主要就是在这个过滤项上：一是不知道有哪些过滤项，二是不知道过滤项该怎么写。<br>这两个问题有一个共同的答案—–wireshark的过滤项是“协议“+”.“+”协议字段”的模式。以端口为例，端口出现于tcp协议中所以有端口这个过滤项且其写法就是tcp.port。<br>推广到其他协议，如eth、ip、udp、http、telnet、ftp、icmp、snmp等等其他协议都是这么个书写思路。当然wireshark出于缩减长度的原因有些字段没有使用协议规定的名称而是使用简写（比如Destination Port在wireshark中写为dstport）又出于简使用增加了一些协议中没有的字段（比如<a href="https://link.zhihu.com/?target=http://www.faqs.org/rfcs/rfc793.html">tcp协议</a>只有源端口和目标端口字段，为了简便使用wireshark增加了tcp.port字段来同时代表这两个），但思路总的算是不变的。而且在实际使用时我们输入“协议”+“.”wireshark就会有支持的字段提示（特别是过滤表达式字段的首字母和wireshark在上边2窗口显示的字段名称首字母通常是一样的），看下名称就大概知道要用哪个字段了。wireshark支持的全部协议及协议字段可查看<a href="https://link.zhihu.com/?target=https://www.wireshark.org/docs/dfref/">官方说明</a>。<br><strong>4.1.2 过滤关系</strong><br>过滤关系就是大于、小于、等于等几种等式关系，我们可以直接看<a href="https://link.zhihu.com/?target=https://www.wireshark.org/docs/wsug_html/%23DispCompOps">官方给出的表</a>。注意其中有“English”和“C-like”两个字段，这个意思是说“English”和“C-like”这两种写法在wireshark中是等价的、都是可用的。</p>
-<p><img src="https://pic1.zhimg.com/v2-4adf07da1264e6db14d4642854df5ae4_r.jpg" alt="preview"></p>
-<p><strong>4.1.3 过滤值</strong><br>过滤值就是设定的过滤项应该满足过滤关系的标准，比如500、5000、50000等等。过滤值的写法一般已经被过滤项和过滤关系设定好了，只是填下自己的期望值就可以了。</p>
-<p><strong>4.2 复合过滤表达示</strong><br>所谓复合过滤表达示，就是指由多条基本过滤表达式组合而成的表达示。基本过滤表达式的写法还是不变的，复合过滤表达示多出来的东西就只是基本过滤表达示的“连接词”<br>我们依然直接参照<a href="https://link.zhihu.com/?target=https://www.wireshark.org/docs/wsug_html/%23FiltLogOps">官方给出的表</a>，同样“English”和“C-like”这两个字段还是说明这两种写法在wireshark中是等价的、都是可用的。</p>
-<p><img src="https://pic4.zhimg.com/v2-0159992833f2e549b7862721278f407b_r.jpg" alt="preview"></p>
-<p><strong>4.3 常见用显示过滤需求及其对应表达式</strong><br>数据链路层：<br>筛选mac地址为04:f9:38:ad:13:26的数据包—-eth.src == 04:f9:38:ad:13:26<br>筛选源mac地址为04:f9:38:ad:13:26的数据包—-eth.src == 04:f9:38:ad:13:26<br>网络层：<br>筛选ip地址为192.168.1.1的数据包—-ip.addr == 192.168.1.1<br>筛选192.168.1.0网段的数据—- ip contains “192.168.1”<br>筛选192.168.1.1和192.168.1.2之间的数据包—-ip.addr == 192.168.1.1 &amp;&amp; ip.addr == 192.168.1.2<br>筛选从192.168.1.1到192.168.1.2的数据包—-ip.src == 192.168.1.1 &amp;&amp; ip.dst == 192.168.1.2<br>传输层：<br>筛选tcp协议的数据包—-tcp<br>筛选除tcp协议以外的数据包—-!tcp<br>筛选端口为80的数据包—-tcp.port == 80</p>
-
+          <p>wireshark教程</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/04/07/wireshak/">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -373,6 +351,13 @@
 
       <time title="创建时间：2021-04-06 17:36:40" itemprop="dateCreated datePublished" datetime="2021-04-06T17:36:40+08:00">2021-04-06</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-04-07 21:17:54" itemprop="dateModified" datetime="2021-04-07T21:17:54+08:00">2021-04-07</time>
+      </span>
 
   
       </div>
@@ -400,20 +385,15 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
+          <p>hello world</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/04/06/hello-world/">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
